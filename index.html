@@ -1,0 +1,43 @@
+<head>
+	<script src='https://cdn.firebase.com/v0/firebase.js'></script>
+	<script src='http://code.jquery.com/jquery-2.0.3.min.js'></script>
+</head>
+
+<body>
+<div id='white-board' style="position:relative;background-color:lightgrey;height:500px;width:500px">
+</div>
+<script>
+var labelsRef = new Firebase('https://sample-project.firebaseIO.com/whiteboards/1/labels');
+labelsRef.on('child_added', function(snapshot) {
+    var txt  = snapshot.val()
+    if ( txt ) {
+      var labelDiv = $("<div id='"+snapshot.name()+"'></div>").appendTo("#white-board");
+      render(labelDiv, txt);
+    }
+});
+
+labelsRef.on('child_removed', function(snapshot) {
+  var txt = snapshot.val()
+  if ( txt ) {
+    $("#"+snapshot.name()).remove();
+  }
+});
+
+render = function( el, data){
+  el.css({left:data.x, top:data.y,position:"absolute"}).append("<label>hellow world</label>");
+  el.on("click",function(event){
+    		event.stopPropagation();
+    		var id = $(event.currentTarget).attr("id");
+    		labelsRef.child(id).remove();
+    	});
+}
+
+$(function(){
+  $("#white-board").on("click",function(event){
+      labelsRef.push({x:event.clientX, y:event.clientY});
+  });
+});
+</script>
+
+
+</body>
