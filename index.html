@@ -1,6 +1,23 @@
 <head>
 	<script src='https://cdn.firebase.com/v0/firebase.js'></script>
 	<script src='http://code.jquery.com/jquery-2.0.3.min.js'></script>
+	<style>
+		.cell .delete, .cell.editing .delete, .cell.editing:hover .delete {
+			display:none;
+		}
+		.cell:hover .delete{
+			display:block;
+		}
+		.cell .input-label {
+			display:none;
+		}
+		.cell.editing .input-label{
+			display:block;
+		}
+		.cell.editing .writing{
+			display:none;
+		}
+	</style>
 </head>
 
 <body>
@@ -9,10 +26,14 @@
 <script>
 var labelsRef = new Firebase('https://sample-project.firebaseIO.com/whiteboards/1/labels');
 labelsRef.on('child_added', function(snapshot) {
-    var txt  = snapshot.val()
-    if ( txt ) {
-      var labelDiv = $("<div id='"+snapshot.name()+"'></div>").appendTo("#white-board");
-      render(labelDiv, txt);
+    var data = snapshot.val()
+    var id = snapshot.name();
+    if ( data ) {
+      var labelDiv = $("<div id='"+id+"'></div>").appendTo("#white-board");
+      render(id, data);
+	labelsRef.child(id).on("value",function(snapshot){
+		render(snapshot.name(), snapshot.val());
+	});
     }
 });
 
@@ -23,13 +44,32 @@ labelsRef.on('child_removed', function(snapshot) {
   }
 });
 
-render = function( el, data){
-  el.css({left:data.x, top:data.y,position:"absolute"}).append("<label>hellow world</label>");
-  el.on("click",function(event){
+render = function( id, data){
+  var el = $("#"+id);
+  el.css({left:data.x, top:data.y,position:"absolute"})
+	.addClass("cell")
+	.html("<label class='writing'>"+(data.writing || "hello world")+"</label><div class='delete'>X</div><input class='input-label'/>");
+  el.find(".delete").on("click",function(event){
     		event.stopPropagation();
-    		var id = $(event.currentTarget).attr("id");
+//    		var id = $(event.currentTarget).attr("id");
     		labelsRef.child(id).remove();
     	});
+  el.on("click",function(event){
+	event.stopPropagation();
+	});
+  el.on("dblclick",function(event){
+	el.addClass("editing");
+	el.find(".input-label").val(el.find(".writing").text());
+	event.stopPropagation();
+	});
+  el.find(".input-label").on("keydown",function(event){	
+	if ( event.keyCode == 13){
+		labelsRef.child(id).update({writing:el.find(".input-label").val()});
+		el.removeClass("editing");
+	}
+	});
+
+  
 }
 
 $(function(){
