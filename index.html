@@ -24,6 +24,7 @@
 <div id='white-board' style="position:relative;background-color:lightgrey;height:500px;width:500px">
 </div>
 <script>
+$("body").append("<label>"+$(window).width()+" "+$(window).height()+"</label>");
 var labelsRef = new Firebase('https://sample-project.firebaseIO.com/whiteboards/1/labels');
 labelsRef.on('child_added', function(snapshot) {
     var data = snapshot.val()
